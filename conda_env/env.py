@@ -95,11 +95,6 @@ def from_environment(name, prefix, no_builds=False, ignore_channels=False, from_
     Returns:     Environment object
     """
     # requested_specs_map = History(prefix).get_requested_specs_map()
-    if from_history:
-        history = History(prefix).get_requested_specs_map()
-        deps = [str(package) for package in history.values()]
-        return Environment(name=name, dependencies=deps, channels=list(context.channels),
-                           prefix=prefix)
     pd = PrefixData(prefix, pip_interop_enabled=True)
 
     precs = tuple(PrefixGraph(pd.iter_records()).graph)
@@ -130,7 +125,16 @@ def from_environment(name, prefix, no_builds=False, ignore_channels=False, from_
             canonical_name = prec.channel.canonical_name
             if canonical_name not in channels:
                 channels.insert(0, canonical_name)
-    return Environment(name=name, dependencies=dependencies, channels=channels, prefix=prefix)
+
+    if from_history:
+        history = History(prefix).get_requested_specs_map()
+        deps = [str(package) for package in history.values()]
+        if pip_precs:
+            deps.append({'pip': ["%s==%s" % (a.name, a.version) for a in pip_precs]})
+        return Environment(name=name, dependencies=deps, channels=channels,
+                           prefix=prefix)
+    else:
+        return Environment(name=name, dependencies=dependencies, channels=channels, prefix=prefix)
 
 
 def from_yaml(yamlstr, **kwargs):
