@@ -329,6 +329,7 @@ def pretty_record(record: PackageRecord) -> None:
     push_line("subdir", "subdir")
     push_line("url", "url")
     push_line("md5", "md5")
+    push_line("extras", "requested_extras")
     if record.timestamp:
         date_str = datetime.fromtimestamp(record.timestamp, timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S %Z"
@@ -344,5 +345,10 @@ def pretty_record(record: PackageRecord) -> None:
         "%-12s: %s"
         % ("dependencies", dashlist(record.depends) if record.depends else "[]")
     )
+    if record.extras and not record.requested_extras:
+        builder.append("extras:")
+        for extra, deps in record.extras.items():
+            deps_string = dashlist(deps, indent=6) if deps else "[]"
+            builder.append(f"    {extra}: {deps_string}")
     builder.append("\n")
     print("\n".join(builder))
